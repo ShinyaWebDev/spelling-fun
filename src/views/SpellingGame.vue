@@ -365,7 +365,7 @@ function speakWord(word) {
   } else {
     utterance.lang = "en-US";
   }
-  utterance.rate = 0.3;
+  utterance.rate = 0.8;
   speechSynthesis.speak(utterance);
 
   gsap.fromTo(
