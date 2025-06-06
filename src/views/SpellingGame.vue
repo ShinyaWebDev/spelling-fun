@@ -148,6 +148,7 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <MudoCelebration v-model="showMudo" />
 
   <!-- <v-dialog v-model="languageDialog" persistent max-width="400">
     <v-card>
@@ -182,6 +183,9 @@ import { storeToRefs } from "pinia";
 import { useSpellingStore } from "@/stores/spellingStore";
 import { gsap } from "gsap";
 import ConfettiExplosion from "vue-confetti-explosion";
+import MudoCelebration from "@/components/MudoCelebration.vue";
+
+const showMudo = ref(false);
 
 const spelling = useSpellingStore();
 const {
@@ -243,8 +247,14 @@ const maxQuestions = computed(() => {
 
 const triggerConfetti = async () => {
   showConfetti.value = false;
+  showMudo.value = false;
   await nextTick();
+
+  // old confetti
   showConfetti.value = true;
+
+  // epic boss
+  showMudo.value = true;
 };
 const languageDialog = ref(true); // show dialog initially
 
