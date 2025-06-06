@@ -11,7 +11,7 @@
           striped
         ></v-progress-linear>
         <div class="text-caption mt-1 text-center">
-          Word {{ currentIndex + 1 }} of {{ words.length }}
+          Word {{ sessionIndex + 1 }} of {{ sessionWords.length }}
         </div>
       </v-col>
     </v-row>
@@ -26,7 +26,7 @@
           icon
           size="x-large"
           color="white"
-          @click="speakWord(currentWord)"
+          @click="speakWord(currentSessionWord)"
         >
           <v-icon size="36">mdi-volume-high</v-icon>
         </v-btn>
@@ -112,6 +112,67 @@
     </p>
     <ConfettiExplosion v-if="showConfetti" />
   </v-container>
+  <v-dialog v-model="setupDialog" persistent max-width="500">
+    <v-card class="pa-4">
+      <!-- Language Selection -->
+      <div class="mb-4">
+        <v-card-title class="text-h6">Choose Language</v-card-title>
+        <v-btn-toggle v-model="selectedLanguageTemp" mandatory>
+          <v-btn value="en">English</v-btn>
+          <v-btn value="jp">Japanese</v-btn>
+        </v-btn-toggle>
+      </div>
+
+      <!-- Question count (only show after language selected) -->
+      <div v-if="selectedLanguageTemp" class="mb-4">
+        <v-card-title class="text-h6">How many questions?</v-card-title>
+        <v-slider
+          v-model="questionCount"
+          :min="1"
+          :max="maxQuestions"
+          :step="1"
+          thumb-label
+        ></v-slider>
+        <div class="text-center">{{ questionCount }} questions</div>
+      </div>
+
+      <!-- Start button -->
+      <v-card-actions class="justify-center">
+        <v-btn
+          :disabled="!selectedLanguageTemp"
+          color="primary"
+          @click="startSession"
+        >
+          Start Game
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- <v-dialog v-model="languageDialog" persistent max-width="400">
+    <v-card>
+      <v-card-title class="text-h6">Choose Language</v-card-title>
+      <v-card-actions>
+        <v-btn color="primary" @click="chooseLanguage('en')">English</v-btn>
+        <v-btn color="secondary" @click="chooseLanguage('jp')">Japanese</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  <v-dialog v-model="questionCountDialog" persistent max-width="400">
+    <v-card>
+      <v-card-title class="text-h6">How many questions?</v-card-title>
+      <v-text-field
+        v-model="questionCount"
+        type="number"
+        label="Questions"
+        min="1"
+        max="20"
+      />
+      <v-card-actions>
+        <v-btn color="primary" @click="startSession">Start</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog> -->
 </template>
 
 <script setup>
@@ -122,11 +183,20 @@ import { useSpellingStore } from "@/stores/spellingStore";
 import { gsap } from "gsap";
 import ConfettiExplosion from "vue-confetti-explosion";
 
-const showConfetti = ref(false);
-
 const spelling = useSpellingStore();
-const { currentWord, nextWord, words, currentIndex, isLastWord } =
-  storeToRefs(spelling);
+const {
+  currentSessionWord,
+  sessionWords,
+  sessionIndex,
+  words,
+  selectedLanguage,
+  prepareSession,
+  setLanguage,
+} = storeToRefs(spelling);
+
+const setupDialog = ref(true);
+const selectedLanguageTemp = ref(null);
+const showConfetti = ref(false);
 
 const result = ref("");
 const resultEl = ref(null);
@@ -141,20 +211,52 @@ const isCompleted = ref(false);
 
 const shuffledLetters = ref([]);
 const dropZones = ref([]);
+const questionCountDialog = ref(true);
+const questionCount = ref(1);
 
+watch(selectedLanguageTemp, (lang) => {
+  if (!lang) return;
+  const langWords = words.value?.[lang];
+  questionCount.value = langWords ? langWords.length : 1;
+});
+
+const startSession = () => {
+  spelling.setLanguage(selectedLanguageTemp.value);
+  spelling.prepareSession(questionCount.value);
+  setupDialog.value = false;
+};
 const progressPercent = computed(() =>
-  Math.round(((currentIndex.value + 1) / words.value.length) * 100)
+  Math.round(((sessionIndex.value + 1) / sessionWords.value.length) * 100)
 );
+
+const maxQuestions = computed(() => {
+  if (!selectedLanguageTemp.value) return 1;
+  const langWords = words.value?.[selectedLanguageTemp.value];
+  return langWords ? langWords.length : 1;
+});
+
+// function startSession() {
+//   spelling.setLanguage(selectedLanguageTemp.value);
+//   spelling.prepareSession(questionCount.value);
+//   setupDialog.value = false;
+// }
 
 const triggerConfetti = async () => {
   showConfetti.value = false;
   await nextTick();
   showConfetti.value = true;
 };
+const languageDialog = ref(true); // show dialog initially
+
+const chooseLanguage = (lang) => {
+  spelling.setLanguage(lang);
+  languageDialog.value = false;
+};
 
 watch(
-  currentWord,
+  currentSessionWord,
   (word) => {
+    if (!word) return;
     shuffledLetters.value = word.split("").sort(() => Math.random() - 0.5);
     dropZones.value = new Array(word.length).fill(null);
     usedIndexes.value = [];
@@ -224,12 +326,12 @@ function onDropTap(slotIndex) {
 }
 
 function resetCurrentWord() {
-  dropZones.value = new Array(currentWord.value.length).fill(null);
+  dropZones.value = new Array(currentSessionWord.value.length).fill(null);
   usedIndexes.value = [];
   selectedTileIndex.value = null;
   result.value = "";
   // optional reshuffle
-  shuffledLetters.value = currentWord.value
+  shuffledLetters.value = currentSessionWord.value
     .split("")
     .sort(() => Math.random() - 0.5);
 }
@@ -238,15 +340,16 @@ function checkAnswer() {
   const formedWord = dropZones.value
     .map((entry) => entry?.letter || "")
     .join("");
-  const correct = formedWord === currentWord.value;
+  const correct = formedWord === currentSessionWord.value;
   result.value = correct ? "🎉 Correct!" : "❌ Try Again!";
   isCorrect.value = correct;
   selectedTileIndex.value = null;
 }
 
 function goToNextWord() {
-  if (!isLastWord.value) {
-    spelling.nextWord();
+  if (sessionIndex.value < sessionWords.value.length - 1) {
+    spelling.nextSessionWord();
+
     isCorrect.value = false;
   } else {
     result.value = "🌟 You've completed!";
@@ -257,8 +360,12 @@ function goToNextWord() {
 
 function speakWord(word) {
   const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = "en-US";
-  utterance.rate = 0.9;
+  if (selectedLanguage.value === "jp") {
+    utterance.lang = "ja-JP";
+  } else {
+    utterance.lang = "en-US";
+  }
+  utterance.rate = 0.3;
   speechSynthesis.speak(utterance);
 
   gsap.fromTo(
@@ -282,19 +389,19 @@ function speakWord(word) {
     );
   });
 }
-watch(
-  currentWord,
-  (word) => {
-    shuffledLetters.value = word.split("").sort(() => Math.random() - 0.5);
-    dropZones.value = new Array(word.length).fill(null);
-    usedIndexes.value = [];
-    selectedTileIndex.value = null;
-    result.value = "";
-    isCorrect.value = false;
-    isCompleted.value = false;
-  },
-  { immediate: true }
-);
+// watch(
+//   currentWord,
+//   (word) => {
+//     shuffledLetters.value = word.split("").sort(() => Math.random() - 0.5);
+//     dropZones.value = new Array(word.length).fill(null);
+//     usedIndexes.value = [];
+//     selectedTileIndex.value = null;
+//     result.value = "";
+//     isCorrect.value = false;
+//     isCompleted.value = false;
+//   },
+//   { immediate: true }
+// );
 
 onBeforeRouteLeave(() => {
   if (isCompleted.value) {
