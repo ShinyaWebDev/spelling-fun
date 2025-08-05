@@ -214,9 +214,9 @@ const vocabularyData = {
       image: "ebi.png",
     },
     {
-      word: "え",
-      meaning: "Picture",
-      acceptable: ["え", "エ", "絵"],
+      word: "えき",
+      meaning: "Station",
+      acceptable: ["えき", "エキ", "駅"],
       image: "e.png",
     },
     {
@@ -283,9 +283,9 @@ const vocabularyData = {
       image: "karasu.png",
     },
     {
-      word: "き",
+      word: "きぎ",
       meaning: "Tree",
-      acceptable: ["き", "キ", "木"],
+      acceptable: ["きぎ", "キギ", "木々"],
       image: "ki.png",
     },
     {
