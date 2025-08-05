@@ -30,7 +30,7 @@
       size="large"
       prepend-icon="mdi-microphone"
     >
-      Japanese Vocabulary
+      Hiragana Practice
     </v-btn>
   </v-container>
 </template>

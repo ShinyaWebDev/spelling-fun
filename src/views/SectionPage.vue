@@ -78,6 +78,19 @@
           </div>
         </div>
 
+        <!-- Completion celebration animation -->
+        <div v-if="showCompletionCelebration" class="completion-overlay">
+          <div class="completion-content">
+            <div class="completion-emoji">🌟🎊✨</div>
+            <div class="completion-text">がんばりました！</div>
+            <img
+              :src="getImageUrl('ganbarimashita.png')"
+              alt="Great job!"
+              class="completion-image"
+            />
+          </div>
+        </div>
+
         <v-btn
           :color="isListening ? 'deep-orange' : 'pink'"
           size="x-large"
@@ -103,6 +116,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useRouter } from "vue-router";
 import HiraganaTracing from "@/components/HiraganaTracing.vue";
 
 const props = defineProps({
@@ -111,6 +125,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const router = useRouter();
 
 const getImageUrl = (filename) => {
   return new URL(`../img/${filename}`, import.meta.url).href;
@@ -257,7 +273,7 @@ const vocabularyData = {
     {
       word: "かい",
       meaning: "Bag",
-      acceptable: ["かい", "カイ", "貝"],
+      acceptable: ["かい", "カイ", "貝", "海"],
       image: "kai.png",
     },
     {
@@ -380,6 +396,7 @@ const isListening = ref(false);
 const speechSupported = ref(false);
 const feedback = ref(null);
 const showCelebration = ref(false);
+const showCompletionCelebration = ref(false);
 const showHint = ref(false);
 const showTracing = ref(true);
 const tracingCharacter = ref(props.row);
@@ -539,9 +556,23 @@ function checkPronunciation(transcript) {
       message: `Perfect! You said: "${currentVocab.value.word}"`,
     };
     showCelebration.value = true;
+
+    // Check if this is the last word in the vocabulary list
+    const isLastWord = currentIndex.value === vocabulary.value.length - 1;
+
     setTimeout(() => {
       showCelebration.value = false;
-      nextWord();
+      if (isLastWord) {
+        // Show completion celebration
+        showCompletionCelebration.value = true;
+        setTimeout(() => {
+          showCompletionCelebration.value = false;
+          // Navigate back to SectionSelector
+          router.push("/");
+        }, 2500);
+      } else {
+        nextWord();
+      }
     }, 2500);
   } else {
     const bestMatch = acceptable.find(
@@ -755,6 +786,48 @@ function toggleCamera() {
   animation: zoomIn 0.5s ease-out;
 }
 
+.completion-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #ff9a9e, #fecfef, #fecfef);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.completion-content {
+  text-align: center;
+  animation: bounceIn 0.6s ease-out;
+}
+
+.completion-emoji {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  animation: pulse 1s infinite;
+}
+
+.completion-text {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #d81b60;
+  margin-bottom: 1rem;
+  font-family: "Fredoka", sans-serif;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.completion-image {
+  max-width: 350px;
+  max-height: 350px;
+  border-radius: 25px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  animation: zoomInSpin 0.8s ease-out;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -798,6 +871,17 @@ function toggleCamera() {
   }
   to {
     transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes zoomInSpin {
+  from {
+    transform: scale(0.3) rotate(-180deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
     opacity: 1;
   }
 }
