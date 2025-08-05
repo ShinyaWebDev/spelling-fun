@@ -11,11 +11,15 @@ import { setupLayouts } from "virtual:generated-layouts";
 import Home from "@/views/Home.vue";
 import SpellingGame from "@/views/SpellingGame.vue";
 import VocabularyList from "@/views/VocabularyList.vue";
+import SectionSelector from "@/views/SectionSelector.vue";
+import SectionPage from "@/views/SectionPage.vue";
 
 const routes = [
   { path: "/", component: Home },
   { path: "/spelling", component: SpellingGame },
   { path: "/vocab", component: VocabularyList },
+  { path: "/japanese", component: SectionSelector },
+  { path: "/sections/:row", component: SectionPage, props: true },
 ];
 
 const router = createRouter({

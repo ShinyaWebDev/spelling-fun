@@ -22,5 +22,15 @@
     >
       Vocabulary List
     </v-btn>
+
+    <v-btn
+      to="/japanese"
+      color="orange"
+      class="ma-2"
+      size="large"
+      prepend-icon="mdi-microphone"
+    >
+      Japanese Vocabulary
+    </v-btn>
   </v-container>
 </template>

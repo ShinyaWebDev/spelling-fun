@@ -11,6 +11,7 @@ declare module 'vue' {
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     DropZone: typeof import('./src/components/DropZone.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    HiraganaTracing: typeof import('./src/components/HiraganaTracing.vue')['default']
     LetterTile: typeof import('./src/components/LetterTile.vue')['default']
     MudoCelebration: typeof import('./src/components/MudoCelebration.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

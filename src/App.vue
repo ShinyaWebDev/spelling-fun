@@ -13,6 +13,9 @@
       <v-btn to="/vocab" icon>
         <v-icon>mdi-book</v-icon>
       </v-btn>
+      <v-btn to="/japanese" icon>
+        <v-icon>mdi-microphone</v-icon>
+      </v-btn>
     </v-bottom-navigation>
   </v-app>
 </template>
