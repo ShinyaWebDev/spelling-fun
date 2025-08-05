@@ -261,7 +261,7 @@ const vocabularyData = {
     {
       word: "かえる",
       meaning: "Frog",
-      acceptable: ["かえる", "カエル", "蛙"],
+      acceptable: ["かえる", "カエル", "蛙", "帰る"],
       image: "kaeru.png",
     },
     {
